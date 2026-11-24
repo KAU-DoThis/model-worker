@@ -30,10 +30,24 @@ AI 서버 ◀─꺼내기── fintris-dev-agent-replies ◀──넣기──�
 
 ## 2. 설치 방법
 
-1. **Python 3.11 이상.** 레포 맨 위에서:
+1. **Python 3.11 이상, 가상환경 안에 설치합니다.** 레포 맨 위에서:
+
+   Linux / macOS
    ```
+   python3 -m venv .venv
+   source .venv/bin/activate
    pip install -r requirements.txt
    ```
+   Windows (PowerShell)
+   ```
+   py -3.11 -m venv .venv
+   .venv\Scripts\Activate.ps1
+   pip install -r requirements.txt
+   ```
+   - 가상환경을 켠 뒤에는 Linux에서도 `python`으로 실행됩니다. 이 문서의 `python …` 명령은 가상환경 안 기준입니다.
+   - Ubuntu 23.04 이상은 가상환경 없이 `pip install`하면 `externally-managed-environment` 오류가 납니다.
+   - `venv` 모듈이 없다고 나오면 `sudo apt install python3-venv`.
+   - 필요한 패키지는 `boto3`, `pyyaml`(Jeff 지시문 파일용)뿐입니다.
 2. **AWS 키 등록.** 재혁에게 받은 이 PC 전용 키를 프로필로 등록합니다. 키는 개인톡으로만 주고받습니다.
    ```
    aws configure --profile fintris-jeff
@@ -41,6 +55,14 @@ AI 서버 ◀─꺼내기── fintris-dev-agent-replies ◀──넣기──�
    - Access Key ID·Secret Access Key: 받은 값
    - Default region: `ap-northeast-2`
    - Output format: 비워 두기
+
+   AWS CLI가 없으면 CLI를 설치하지 않고 파일로 등록해도 됩니다. `~/.aws/credentials`(Windows는 `%USERPROFILE%\.aws\credentials`)에:
+   ```
+   [fintris-jeff]
+   aws_access_key_id = 받은 값
+   aws_secret_access_key = 받은 값
+   ```
+   Linux에서는 `chmod 600 ~/.aws/credentials`로 본인만 읽게 해 둡니다.
 
    이 키로 할 수 있는 건 **자기 요청 큐 꺼내기·지우기 + 결과 큐 넣기**뿐입니다. 다른 큐는 거부됩니다.
    확인: `aws sts get-caller-identity --profile fintris-jeff`
@@ -91,7 +113,9 @@ jeff 큐 확인됨
 ```
 11/18 실제 큐로 잰 왕복 시간(AI 서버가 넣고 답을 받기까지): 첫 요청 약 1.8초, 그다음부터 약 0.1초.
 
-- 멈추기: Ctrl+C. 처리 중인 요청을 끝내고 최대 20초 안에 멈춥니다.
+- 멈추기: Ctrl+C, 또는 백그라운드로 띄웠으면 `kill <PID>`(SIGTERM). 둘 다 처리 중인 요청을 끝내고 최대 20초 안에 멈춥니다.
+- 터미널을 닫아도 계속 돌게 하려면 `tmux`·`screen` 안에서 띄우거나 `nohup python -m sqs_bridge > worker.log 2>&1 &`.
+- `.env`는 `KEY=값` 형식입니다. `export KEY=값`, `KEY="값"`처럼 써도 읽습니다.
 - 한 줄이라도 오류로 죽으면 전체가 멈추고 종료 코드 1로 끝납니다. 다시 띄우면 됩니다. 처리 못 한 요청은 큐에 남아 있습니다.
 
 ### 3.3 sLM으로 바꾸기
@@ -150,7 +174,7 @@ python examples/send_one.py slm "스타벅스 강남점"
 
 ### 3.6 테스트
 
-레포 맨 위에서 (가짜 큐로 돌아서 AWS·모델 없이 됩니다):
+레포 맨 위, 가상환경 안에서 (가짜 큐로 돌아서 AWS·모델 없이 됩니다):
 ```
 pip install pytest
 python -m pytest -q

@@ -18,14 +18,20 @@ ROOT = Path(__file__).resolve().parent.parent
 
 
 def load_env(path: Path = ROOT / ".env") -> None:
-    """KEY=VALUE 줄만 읽음. 이미 있는 환경변수는 안 덮어씀."""
+    """KEY=VALUE 줄만 읽음. 이미 있는 환경변수는 안 덮어씀.
+    셸에서 쓰던 형식(`export KEY=...`, 값을 감싼 따옴표)도 받는다."""
     if not path.exists():
         return
     for line in path.read_text(encoding="utf-8").splitlines():
         line = line.strip()
+        if line.startswith("export "):
+            line = line[len("export "):].lstrip()
         if line and not line.startswith("#") and "=" in line:
             key, value = line.split("=", 1)
-            os.environ.setdefault(key.strip(), value.strip())
+            value = value.strip()
+            if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
+                value = value[1:-1]
+            os.environ.setdefault(key.strip(), value)
 
 
 def load_prompt(path: str) -> tuple[dict, str]:

@@ -106,7 +106,9 @@ def main() -> None:
 
     check_access(make_sqs(), lanes)
     stop = threading.Event()
-    signal.signal(signal.SIGINT, lambda *_: (stop.set(), print("멈추는 중… (최대 20초)")))
+    # Ctrl+C(SIGINT)와 kill·systemd·tmux 종료(SIGTERM) 모두 같은 방식으로 멈춘다
+    for sig in (signal.SIGINT, signal.SIGTERM):
+        signal.signal(sig, lambda *_: (stop.set(), print("멈추는 중… (최대 20초)")))
     ok = run_lanes(make_sqs, lanes, stop)
     print("멈춤" if ok else "오류로 멈춤")
     sys.exit(0 if ok else 1)
