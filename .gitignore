@@ -1,0 +1,16 @@
+# 비밀값·로컬 설정
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
